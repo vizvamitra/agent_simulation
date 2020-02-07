@@ -1,0 +1,25 @@
+{
+  "name": "paperjs",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c",
+    "build:prod": "rollup -c --environment BUILD:production",
+    "autobuild": "rollup -c -w",
+    "dev": "run-p start:dev autobuild",
+    "start": "sirv public",
+    "start:dev": "sirv public --dev"
+  },
+  "dependencies": {
+    "paper": "^0.12.4"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^1.29.1",
+    "rollup-plugin-livereload": "^1.0.4",
+    "sirv-cli": "^0.4.5"
+  }
+}
