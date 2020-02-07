@@ -1,4 +1,5 @@
 import { Vector2 } from '../math/Vector2'
+import { Utils } from '../math/Utils'
 
 /*
 Config:
@@ -61,7 +62,7 @@ export class Agent {
     var resultant = new Vector2(0, 0)
 
     for (var i = 0; i < this._numberOfSensors; i++) {
-      var direction = this._toRectCoords(i * step).add(this._directionNoise())
+      var direction = Utils.toRectCoords(i * step).add(this._directionNoise())
       var foodAmount = this.localVicinity.towards(direction, this._radius).foodAmount()
 
       var weightedDirection = direction.mult(foodAmount + this._foodAmountNoise())
@@ -71,25 +72,17 @@ export class Agent {
     return resultant.normalize()
   }
 
-  _toRectCoords(angle, distance = 1.0) {
-    return new Vector2(distance * Math.cos(angle), distance * Math.sin(angle))
-  }
-
-  _randInRange(min, max) {
-    return Math.random() * (max - min) + min
-  }
-
   _directionNoise() {
     var noiseSize = this._sensorNoise.direction
 
     return new Vector2(
-      this._randInRange(-noiseSize, noiseSize),
-      this._randInRange(-noiseSize, noiseSize)
+      Utils.randInRange(-noiseSize, noiseSize),
+      Utils.randInRange(-noiseSize, noiseSize)
     )
   }
 
   _foodAmountNoise() {
-    return this._randInRange(
+    return Utils.randInRange(
       this._sensorNoise.foodAmount.min,
       this._sensorNoise.foodAmount.max
     )
