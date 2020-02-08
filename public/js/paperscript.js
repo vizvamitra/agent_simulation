@@ -1,2 +1,38 @@
-for(var o=[],t=Config.visualization,l=simulation.getState(),a=0;a<l.foodField.length;a++){o.push([]);for(var i=0;i<l.foodField[a].length;i++)o[a].push(new Path.Rectangle({point:[a*t.locationScale+1,i*t.locationScale+1],size:[t.locationScale,t.locationScale],fillColor:`#${Math.round(25.5*l.foodField[a][i]).toString(16)}0000`}))}function e(l){for(var a=0;a<t.stepsPerFrame;a++)simulation.step();for(var i=simulation.getState(),e=0;e<i.foodField.length;e++)for(var n=0;n<i.foodField[e].length;n++)o[e][n].fillColor=`#${Math.round(25.5*i.foodField[e][n]).toString(16)}0000`;t.displayAgents&&i.agents.forEach((function(t){o[Math.round(t.location.x)][Math.round(t.location.y)].fillColor="alive"==t.state?"#00FF00":"#0000FF"}))}export{e as onFrame};
+var rects = [];
+var config = Config.visualization;
+
+var state = simulation.getState();
+for (var i = 0; i < state.foodField.length; i++) {
+  rects.push([]);
+  for (var j = 0; j < state.foodField[i].length; j++) {
+    rects[i].push(
+      new Path.Rectangle({
+        point: [i * config.locationScale + 1, j * config.locationScale + 1],
+        size: [config.locationScale, config.locationScale],
+        fillColor: `#${Math.round(state.foodField[i][j] * 25.5).toString(16)}0000`
+      })
+    );
+  }
+}
+
+function onFrame(event) {
+  for (var k = 0; k < config.stepsPerFrame; k++) { simulation.step(); }
+
+  var state = simulation.getState();
+
+  for (var i = 0; i < state.foodField.length; i++) {
+    for (var j = 0; j < state.foodField[i].length; j++) {
+      rects[i][j].fillColor = `#${Math.round(state.foodField[i][j] * 25.5).toString(16)}0000`;
+    }
+  }
+
+  if (config.displayAgents) {
+    state.agents.forEach(function (agent) {
+      var rect = rects[Math.round(agent.location.x)][Math.round(agent.location.y)];
+      rect.fillColor = agent.state == 'alive' ? '#00FF00' : '#0000FF';
+    });
+  }
+}
+
+export { onFrame };
 //# sourceMappingURL=paperscript.js.map
