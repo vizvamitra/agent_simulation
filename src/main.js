@@ -47,9 +47,3 @@ restartButton.addEventListener('click', function(e){
 
   simulation = new Simulation(Config.simulation)
 })
-// window.addEventListener('load', function() {
-//   navigator.serviceWorker.register('/js/sw.js').then(
-//     reg => console.log(reg),
-//     err => console.log(err)
-//   );
-// })

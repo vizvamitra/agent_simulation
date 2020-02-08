@@ -1,12 +1,13 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
+import { terser } from 'rollup-plugin-terser';
 import postcss from 'rollup-plugin-postcss';
 
 const production = process.env.BUILD === "production";
 
 export default {
-  input: ['src/main.js', 'src/paperscript.js', 'src/sw.js'],
+  input: ['src/main.js', 'src/paperscript.js'],
   output: {
     sourcemap: true,
     // format: 'iife',
@@ -28,6 +29,10 @@ export default {
     // Watch the `public` directory and refresh the
     // browser on changes when not in production
     !production && livereload('public'),
+
+    // If we're building for production (npm run build
+    // instead of npm run dev), minify
+    production && terser()
   ],
   watch: {
     clearScreen: false
