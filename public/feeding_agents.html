@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eating agents simulation</title>
+  <link rel="stylesheet" type="text/css" href="./css/tailwind.css">
+
+  <style>
+    #canvas {
+      width: 600px;
+      height: 600px;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-gray-600 text-lg">
+  <div class="m-auto flex justify-center mt-3">
+    <canvas id="canvas" class="bg-black" resize></canvas>
+    <form class="ml-4">
+      <fieldset>
+        <legend class="text-lg uppercase tracking-wide text-gray-700 ml-auto mr-0">Visualization</legend>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="visualization_stepsPerFrame" class="mr-1">Steps per frame</label>
+          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="visualization_stepsPerFrame" value="5000">
+        </div>
+
+        <div class="flex items-center justify-end mt-2">
+          <input type="checkbox" name="visualization_displayAgents" class="p-1 mr-1 leading-tight">
+          <label for="visualization_displayAgents">Display agents</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="mt-3">
+        <legend class="text-lg uppercase tracking-wide text-gray-700 ml-auto mr-0 mb-1">Simulation</legend>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_agentCount" class="mr-1"># of agents</label>
+          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agentCount" value="10">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_agent_hungerPerStep" class="mr-2">Hunger increase per step</label>
+          <div class="flex-grow"></div>
+          <input type="range" name="simulation_agent_hungerPerStep" class="p-1 mr-1" min="0" max="1" step="0.01" value="0.05" oninput="hungerPerStepOutput.value = (Math.round(valueAsNumber * 100)) + '%'">
+          <output for="simulation_agent_hungerPerStep" id="hungerPerStepOutput" class="w-10 text-right">5%</output>
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_agent_numberOfSensors" class="mr-2"># of sensors</label>
+          <div class="flex-grow"></div>
+          <input type="range" name="simulation_agent_numberOfSensors" class="p-1 mr-1" min="1" max="16" step="1" value="3" oninput="numberOfSensorsOutput.value = valueAsNumber">
+          <output for="simulation_agent_numberOfSensors" id="numberOfSensorsOutput" class="w-10 text-right">3</output>
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_agent_radius" class="mr-1">Agent radius</label>
+          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agent_radius" value="0.5">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_agent_speedCoefficient" class="mr-1">Agent speed coefficient</label>
+          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agent_speedCoefficient" value="1">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_agent_sensorNoise_direction" class="mr-1">Direction noise</label>
+          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agent_sensorNoise_direction" value="0.05">
+        </div>
+
+        <div class="flex items-center justify-end mt-2">
+          <input type="checkbox" name="simulation_restoreFood" class="p-1 mr-1 leading-tight">
+          <label for="simulation_restoreFood">Food slowly restores</label>
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_restoreFoodOnceIn" class="mr-1">Restore food once in (steps)</label>
+          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_restoreFoodOnceIn" value="100">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_world_maxFoodRestoreAmount" class="mr-1">Max food restore amount</label>
+          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_world_maxFoodRestoreAmount" value="0.01">
+        </div>
+      </fieldset>
+
+      <fieldset class="flex items-center justify-end mt-3">
+        <button id="restartBtn" class="px-4 py-2 text-gray-400 bg-blue-700 hover:bg-blue-900 rounded shadow-md hover:shadow-none uppercase tracking-wide focus:outline-none">Restart</button>
+      </fieldset>
+    </form>
+  </div>
+
+  <script type="text/javascript" src="js/main.js"></script>
+  <script type="text/javascript">
+    var runner = new FeedingAgents.Runner()
+  </script>
+  <script type="text/paperscript" src="js/paperscript.js" canvas="canvas"></script>
+</body>
+</html>

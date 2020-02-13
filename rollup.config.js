@@ -6,7 +6,10 @@ import postcss from 'rollup-plugin-postcss';
 const production = process.env.BUILD === "production";
 
 export default {
-  input: ['src/main.js', 'src/paperscript.js'],
+  input: [
+    'src/main.js',
+    'src/paperscript.js'
+  ],
   output: {
     sourcemap: true,
     // format: 'iife',

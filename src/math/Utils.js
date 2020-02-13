@@ -8,4 +8,8 @@ export class Utils {
   static randInRange(min, max) {
     return Math.random() * (max - min) + min
   }
+
+  static degToRad(degrees) {
+    return (Math.PI * (degrees % 360)) / 180
+  }
 }

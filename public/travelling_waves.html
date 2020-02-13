@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Travelling waves simulation</title>
+  <link rel="stylesheet" type="text/css" href="./css/tailwind.css">
+
+  <style>
+    #canvas {
+      width: 400px;
+      height: 400px;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-900 text-gray-600 text-lg">
+  <div class="m-auto flex justify-center mt-3">
+    <canvas id="canvas" class="bg-black" resize></canvas>
+    <form class="ml-4">
+      <fieldset>
+        <legend class="text-lg uppercase tracking-wide text-gray-700 ml-auto mr-0">Visualization</legend>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="visualization_stepsPerFrame" class="mr-1">Steps per frame</label>
+          <input type="text" class="shadow-inner bg-black px-2 py-1 rounded" name="visualization_stepsPerFrame" value="1">
+        </div>
+      </fieldset>
+
+      <fieldset class="mt-3">
+        <legend class="text-lg uppercase tracking-wide text-gray-700 ml-auto mr-0 mb-1">Simulation</legend>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_timeResolution" class="mr-1">Time resolution (seconds)</label>
+          <input type="text" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_timeResolution" value="0.001">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="visualization_direction" class="mr-2">Movement direction</label>
+          <div class="flex-grow"></div>
+          <input type="range" name="simulation_direction" class="p-1 mr-1" min="0" max="359" step="1" value="0" oninput="directionOutput.value = valueAsNumber + '°'">
+          <output for="simulation_direction" id="directionOutput" class="w-10 text-right">0°</output>
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_speed" class="mr-1">Movement speed (m/s)</label>
+          <input type="text" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_speed" value="40">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_cell_baseRate" class="mr-1">Base burst frequency</label>
+          <input type="text" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_cell_baseRate" value="8">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_cell_speedSlope" class="mr-1">Speed slope</label>
+          <input type="text" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_cell_speedSlope" value="0.025">
+        </div>
+
+        <div class="flex items-center justify-between mt-2">
+          <label for="simulation_cell_maxDirectionBasedFreqTuning" class="mr-1">Max direction effect</label>
+          <input type="text" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_cell_maxDirectionBasedFreqTuning" value="0.025">
+        </div>
+      </fieldset>
+
+      <fieldset class="flex items-center justify-end mt-3">
+        <button id="restartBtn" class="px-4 py-2 text-gray-400 bg-blue-700 hover:bg-blue-900 rounded shadow-md hover:shadow-none uppercase tracking-wide focus:outline-none">Restart</button>
+      </fieldset>
+    </form>
+  </div>
+
+  <script type="text/javascript" src="js/main.js"></script>
+  <script type="text/javascript">
+    var runner = new TravellingWaves.Runner();
+  </script>
+  <script type="text/paperscript" src="js/paperscript.js" canvas="canvas"></script>
+</body>
+</html>

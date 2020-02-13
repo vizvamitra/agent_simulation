@@ -22426,6 +22426,14 @@ class Vector2 {
     var norm = this.norm();
     return new Vector2(this.x / norm, this.y / norm)
   }
+
+  dot(other) {
+    return this.x * other.x + this.y * other.y
+  }
+
+  cosAngle(other) {
+    return this.dot(other) / (this.norm() * other.norm())
+  }
 }
 
 /*
@@ -22440,6 +22448,7 @@ Config:
 class FoodField {
   constructor(config) {
     this._maxFoodPerLocation = config.maxFoodPerLocation;
+    this._maxFoodRestoreAmount = config.maxFoodRestoreAmount;
     this.field = this._createField(config.width, config.height);
   }
 
@@ -22454,6 +22463,17 @@ class FoodField {
     this.field[Math.round(location.x)][Math.round(location.y)] = current - to_withdraw;
 
     return to_withdraw
+  }
+
+  restore() {
+    for (var i = 0; i < this.field.length; i ++) {
+      for (var j = 0; j < this.field[i].length; j ++) {
+        this.field[i][j] = Math.min(
+          this.field[i][j] + Math.random() * this._maxFoodRestoreAmount,
+          this._maxFoodPerLocation
+        );
+      }
+    }
   }
 
   _createField(width, height) {
@@ -22525,6 +22545,10 @@ class World {
     return this.foodField.withdraw(location, amount)
   }
 
+  restoreFood() {
+    this.foodField.restore();
+  }
+
   _isOutOfBounds(location) {
     return (
       location.x < 0 || location.x >= this.width ||
@@ -22540,6 +22564,10 @@ class Utils {
 
   static randInRange(min, max) {
     return Math.random() * (max - min) + min
+  }
+
+  static degToRad(degrees) {
+    return (Math.PI * (degrees % 360)) / 180
   }
 }
 
@@ -22569,6 +22597,8 @@ class Agent {
     this._radius = config.radius;
     this._speedCoefficient = config.speedCoefficient;
     this._sensorNoise = config.sensorNoise;
+
+    this._sensorDirections = this._calculateSensorDirections();
   }
 
   step() {
@@ -22600,14 +22630,13 @@ class Agent {
   }
 
   _movementDirection(local_vicinity) {
-    var step = (2 * Math.PI) / this._numberOfSensors;
     var resultant = new Vector2(0, 0);
 
     for (var i = 0; i < this._numberOfSensors; i++) {
-      var direction = Utils.toRectCoords(i * step).add(this._directionNoise());
+      var direction = this._sensorDirections[i].add(this._directionNoise()).normalize();
       var foodAmount = this.localVicinity.towards(direction, this._radius).foodAmount();
 
-      var weightedDirection = direction.mult(foodAmount + this._foodAmountNoise());
+      var weightedDirection = direction.mult(foodAmount / 10 + this._foodAmountNoise());
       resultant = resultant.add(weightedDirection);
     }
 
@@ -22629,17 +22658,27 @@ class Agent {
       this._sensorNoise.foodAmount.max
     )
   }
+
+  _calculateSensorDirections() {
+    var directions = [];
+    var step = (2 * Math.PI) / this._numberOfSensors;
+
+    for (var i = 0; i < this._numberOfSensors; i++) {
+      directions.push(Utils.toRectCoords(i * step));
+    }
+
+    return directions
+  }
 }
 
 class Simulation {
   constructor(config) {
     this.world = new World(config.world);
-    this.stepNumber = 0;
+    this.agents = this._buildAgents(config);
 
-    this.agents = [];
-    for (var i = 0; i < config.agentCount; i++) {
-      this.agents.push(this._buildAgent(config));
-    }
+    this._stepNumber = 0;
+    this._restoreFood = config.restoreFood;
+    this._restoreFoodOnceIn = config.restoreFoodOnceIn;
   }
 
   step(printState = false) {
@@ -22647,8 +22686,11 @@ class Simulation {
     if (printState) { this._printState(this.getState()); }
 
     this.agents.map(agent => agent.step());
+    if (this._restoreFood && this._stepNumber % this._restoreFoodOnceIn == 0) {
+      this.world.restoreFood();
+    }
 
-    this.stepNumber += 1;
+    this._stepNumber += 1;
   }
 
   getState() {
@@ -22666,7 +22708,7 @@ class Simulation {
   }
 
   _printState(state) {
-    console.log(`\n### step ${this.stepNumber} ###`);
+    console.log(`\n### step ${this._stepNumber} ###`);
 
     var flatFood = state.foodField.flat();
     var meanFood = flatFood.reduce((s, v) => s + v).toFixed(3) / flatFood.length;
@@ -22689,58 +22731,339 @@ class Simulation {
     });
   }
 
-  _buildAgent(config) {
-    var startLocation = new Vector2(
-      Math.random() * (config.world.width - 1),
-      Math.random() * (config.world.height - 1)
-    );
-    return new Agent(this.world.localVicinity(startLocation), config.agent)
+  _buildAgents(config) {
+    var agents = [];
+
+    for (var i = 0; i < config.agentCount; i++) {
+      var startLocation = new Vector2(
+        Math.random() * (config.world.width - 1),
+        Math.random() * (config.world.height - 1)
+      );
+      var agent = new Agent(this.world.localVicinity(startLocation), config.agent);
+
+      agents.push(agent);
+    }
+
+    return agents
   }
 }
 
-window.Config = {
-  visualization: {
-    stepsPerFrame: 5000,
-    displayAgents: false,
-    locationScale: 6
-  },
-  simulation: {
-    agentCount: 10,
-    world: {
-      width: 100,
-      height: 100,
-      maxFoodPerLocation: 10
-    },
-    agent: {
-      hungerPerStep: 0.05,
-      numberOfSensors: 3,
-      radius: 0.5,
-      speedCoefficient: 1,
-      sensorNoise: {
-        direction: 0.05,
-        foodAmount: { min: 0.1, max: 0.2 }
+class Visualization {
+  constructor(simulation, config) {
+    this.simulation = simulation;
+    this.config = config;
+  }
+
+  init() {
+    paperFull.setup('canvas');
+
+    this.rects = [];
+
+    var state = this.simulation.getState();
+    for (var i = 0; i < state.foodField.length; i++) {
+      this.rects.push([]);
+      for (var j = 0; j < state.foodField[i].length; j++) {
+        this.rects[i].push(
+          new paperFull.Path.Rectangle({
+            point: [i * this.config.locationScale + 1, j * this.config.locationScale + 1],
+            size: [this.config.locationScale, this.config.locationScale],
+            fillColor: `#${Math.round(state.foodField[i][j] * 25.5).toString(16)}0000`
+          })
+        );
       }
     }
   }
-};
 
-var simulation = new Simulation(Config.simulation);
+  onFrame(event) {
+    for (var k = 0; k < this.config.stepsPerFrame; k++) { this.simulation.step(); }
 
-var form = document.querySelector('form');
-form.addEventListener('input', function(e) {
-  var nesting = `["${e.target.name.split('_').join('"]["')}"]`;
-  var value = e.target.type == 'checkbox' ? e.target.checked : e.target.value;
+    var state = this.simulation.getState();
 
-  eval(`Config${nesting} = ${value}`);
+    for (var i = 0; i < state.foodField.length; i++) {
+      for (var j = 0; j < state.foodField[i].length; j++) {
+        this.rects[i][j].fillColor = `#${Math.round(state.foodField[i][j] * 25.5).toString(16)}0000`;
+      }
+    }
 
-  simulation = new Simulation(Config.simulation);
+    if (this.config.displayAgents) {
+      state.agents.forEach(function (agent) {
+        var rect = this.rects[Math.round(agent.location.x)][Math.round(agent.location.y)];
+        rect.fillColor = agent.state == 'alive' ? '#00FF00' : '#0000FF';
+      }.bind(this));
+    }
+  }
+}
+
+class UI {
+  constructor(config) {
+    this.config = config;
+  }
+
+  init() {
+    var form = document.querySelector('form');
+    form.addEventListener('input', this._onConfigChange.bind(this));
+
+    var restartButton = document.querySelector('#restartBtn');
+    restartButton.addEventListener('click', this._onRestartClick.bind(this));
+  }
+
+  _onConfigChange(e) {
+    var nesting = `["${e.target.name.split('_').join('"]["')}"]`;
+    var value = e.target.type == 'checkbox' ? e.target.checked : e.target.value;
+
+    eval(`this.config${nesting} = ${value}`);
+
+    var simulation = new Simulation(this.config.simulation);
+    window.visualization = new Visualization(simulation, this.config.visualization);
+    visualization.init();
+  }
+
+  _onRestartClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var simulation = new Simulation(this.config.simulation);
+    window.visualization = new Visualization(simulation, this.config.visualization);
+    visualization.init();
+  }
+}
+
+class Runner {
+  constructor() {
+    var config = {
+      visualization: {
+        stepsPerFrame: 5000,
+        displayAgents: false,
+        locationScale: 6
+      },
+      simulation: {
+        agentCount: 10,
+        restoreFood: false,
+        restoreFoodOnceIn: 100,
+        world: {
+          width: 100,
+          height: 100,
+          maxFoodPerLocation: 10,
+          maxFoodRestoreAmount: 0.01
+        },
+        agent: {
+          hungerPerStep: 0.05,
+          numberOfSensors: 3,
+          radius: 0.5,
+          speedCoefficient: 1,
+          sensorNoise: {
+            direction: 0.05,
+            foodAmount: { min: 0.1, max: 0.2 }
+          }
+        }
+      }
+    };
+
+    var simulation = new Simulation(config.simulation);
+    window.visualization = new Visualization(simulation, config.visualization);
+
+    window.onload = function(e) {
+      var ui = new UI(config);
+      ui.init();
+    };
+  }
+}
+
+var FeedingAgents = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Runner: Runner
 });
 
-var restartButton = document.querySelector('#restartBtn');
-restartButton.addEventListener('click', function(e){
-  e.preventDefault();
-  e.stopPropagation();
+/*
+Config:
 
-  simulation = new Simulation(Config.simulation);
+{
+  "baseRate": 8,                        // Hz
+  "speedSlope": 0.025,
+  "maxDirectionBasedFreqTuning": 0.025
+}
+*/
+class Cell {
+  constructor(directionPreference, initialPhase, config) {
+    this.directionPreference = directionPreference;
+    this.phase = initialPhase;
+
+    this._maxDirectionBasedFreqTuning = config.maxDirectionBasedFreqTuning;
+    this._speedSlope = config.speedSlope;
+    this._baseRate = config.baseRate;
+  }
+
+  step(direction, speed, timeInterval) {
+    var cosAngle = this.directionPreference.cosAngle(direction);
+    var freqTuning = 1 + cosAngle * this._maxDirectionBasedFreqTuning;
+    var speedTuning = this._speedSlope * speed;
+    var phaseChange = ((this._baseRate + speedTuning) * freqTuning) * timeInterval;
+
+    this.phase = (this.phase + phaseChange) % 1;
+  }
+
+  state() {
+    return Math.sin(2 * Math.PI * this.phase)
+  }
+}
+
+class Simulation$1 {
+  constructor(config) {
+    this._movementDirection = Utils.toRectCoords(Utils.degToRad(config.movementDirection));
+    this._movementSpeed = config.movementSpeed;
+    this._timeResolution = config.timeResolution;
+    this._preferredDirectionsNumber = config.preferredDirectionsNumber;
+    this._oscillatorSize = config.oscillatorSize;
+
+    this.cells = this._buildCells(config.cell);
+  }
+
+  step() {
+    this.cells.forEach(row =>
+      row.forEach(cell =>
+        cell.step(this._movementDirection, this._movementSpeed, this._timeResolution)
+      )
+    );
+  }
+
+  _buildCells(config) {
+    var cells = [];
+    var angleStep = (2 * Math.PI) / this._preferredDirectionsNumber;
+
+    for (var i = 0; i < this._preferredDirectionsNumber; i++) {
+      cells[i] = [];
+      var preferredDirection = Utils.toRectCoords(i * angleStep);
+
+      for (var j = 0; j < this._oscillatorSize; j++) {
+        cells[i].push(
+          new Cell(preferredDirection, j / this._oscillatorSize, config)
+        );
+      }
+    }
+
+    return cells
+  }
+}
+
+class Visualization$1 {
+  constructor(simulation, config) {
+    this.simulation = simulation;
+    this._stepsPerFrame = config.stepsPerFrame;
+  }
+
+  init() {
+    paperFull.setup('canvas');
+
+    this.rects = [];
+    var cells = this.simulation.cells;
+
+    for (var i = 0; i < cells.length; i++) {
+      this.rects.push([]);
+      for (var j = 0; j < cells[i].length; j++) {
+        this.rects[i].push(
+          new paperFull.Path.Rectangle({
+            point: [i * 10 + 1, j * 10 + 1],
+            size: [10, 10],
+            fillColor: this._cellColor(cells[i][j].state())
+          })
+        );
+      }
+    }
+  }
+
+  onFrame(event) {
+    for (var k = 0; k < this._stepsPerFrame; k++) {
+      this.simulation.step();
+    }
+
+    var cells = this.simulation.cells;
+
+    for (var i = 0; i < cells.length; i++) {
+      for (var j = 0; j < cells[i].length; j++) {
+        this.rects[i][j].fillColor = this._cellColor(cells[i][j].state());
+      }
+    }
+  }
+
+  _cellColor(cellState) {
+    var colorPosition = cellState >= 0 ? 0 : 2;
+    var colorIntensity = Math.round(Math.abs(cellState) * 255);
+    var intensities = [0, 0, 0];
+    intensities[colorPosition] = colorIntensity;
+
+    return `rgb(${intensities.join(',')})`
+  }
+}
+
+class UI$1 {
+  constructor(config) {
+    this.config = config;
+  }
+
+  init() {
+    var form = document.querySelector('form');
+    form.addEventListener('input', this._onConfigChange.bind(this));
+
+    var restartButton = document.querySelector('#restartBtn');
+    restartButton.addEventListener('click', this._onRestartClick.bind(this));
+  }
+
+  _onConfigChange(e) {
+    var nesting = `["${e.target.name.split('_').join('"]["')}"]`;
+    var value = Number(e.target.value);
+
+    eval(`this.config${nesting} = ${value}`);
+
+    var simulation = new Simulation$1(this.config.simulation);
+    window.visualization = new Visualization$1(simulation, this.config.visualization);
+    visualization.init();
+  }
+
+  _onRestartClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    var simulation = new Simulation$1(this.config.simulation);
+    window.visualization = new Visualization$1(simulation, this.config.visualization);
+    visualization.init();
+  }
+}
+
+class Runner$1 {
+  constructor() {
+    var config = {
+      visualization: {
+        stepsPerFrame: 1,
+      },
+      simulation: {
+        preferredDirectionsNumber: 40,
+        oscillatorSize: 40,
+        timeResolution: 0.001,
+        movementDirection: 0,
+        movementSpeed: 40,
+        cell: {
+          baseRate: 8,
+          speedSlope: 0.025,
+          maxDirectionBasedFreqTuning: 0.025,
+        }
+      }
+    };
+
+    var simulation = new Simulation$1(config.simulation);
+    window.visualization = new Visualization$1(simulation, config.visualization);
+
+    window.onload = function(e) {
+      var ui = new UI$1(config);
+      ui.init();
+    };
+  }
+}
+
+var TravellingWaves = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Runner: Runner$1
 });
+
+window.FeedingAgents = FeedingAgents;
+window.TravellingWaves = TravellingWaves;
 //# sourceMappingURL=main.js.map

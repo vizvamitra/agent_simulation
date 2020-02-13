@@ -37,6 +37,10 @@ export class World {
     return this.foodField.withdraw(location, amount)
   }
 
+  restoreFood() {
+    this.foodField.restore()
+  }
+
   _isOutOfBounds(location) {
     return (
       location.x < 0 || location.x >= this.width ||

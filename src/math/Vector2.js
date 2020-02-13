@@ -24,4 +24,12 @@ export class Vector2 {
     var norm = this.norm()
     return new Vector2(this.x / norm, this.y / norm)
   }
+
+  dot(other) {
+    return this.x * other.x + this.y * other.y
+  }
+
+  cosAngle(other) {
+    return this.dot(other) / (this.norm() * other.norm())
+  }
 }

@@ -2,15 +2,14 @@ import { Vector2 } from '../math/Vector2'
 import { World } from './World'
 import { Agent } from './Agent'
 
-export default class Simulation {
+export class Simulation {
   constructor(config) {
     this.world = new World(config.world)
-    this.stepNumber = 0
+    this.agents = this._buildAgents(config)
 
-    this.agents = []
-    for (var i = 0; i < config.agentCount; i++) {
-      this.agents.push(this._buildAgent(config))
-    }
+    this._stepNumber = 0
+    this._restoreFood = config.restoreFood
+    this._restoreFoodOnceIn = config.restoreFoodOnceIn
   }
 
   step(printState = false) {
@@ -18,8 +17,11 @@ export default class Simulation {
     if (printState) { this._printState(this.getState()) }
 
     this.agents.map(agent => agent.step())
+    if (this._restoreFood && this._stepNumber % this._restoreFoodOnceIn == 0) {
+      this.world.restoreFood()
+    }
 
-    this.stepNumber += 1
+    this._stepNumber += 1
   }
 
   getState() {
@@ -37,7 +39,7 @@ export default class Simulation {
   }
 
   _printState(state) {
-    console.log(`\n### step ${this.stepNumber} ###`)
+    console.log(`\n### step ${this._stepNumber} ###`)
 
     var flatFood = state.foodField.flat()
     var meanFood = flatFood.reduce((s, v) => s + v).toFixed(3) / flatFood.length
@@ -60,11 +62,19 @@ export default class Simulation {
     })
   }
 
-  _buildAgent(config) {
-    var startLocation = new Vector2(
-      Math.random() * (config.world.width - 1),
-      Math.random() * (config.world.height - 1)
-    )
-    return new Agent(this.world.localVicinity(startLocation), config.agent)
+  _buildAgents(config) {
+    var agents = []
+
+    for (var i = 0; i < config.agentCount; i++) {
+      var startLocation = new Vector2(
+        Math.random() * (config.world.width - 1),
+        Math.random() * (config.world.height - 1)
+      )
+      var agent = new Agent(this.world.localVicinity(startLocation), config.agent)
+
+      agents.push(agent)
+    }
+
+    return agents
   }
 }

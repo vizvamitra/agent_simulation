@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Eating agents simulation</title>
+  <title>Simulations</title>
   <link rel="stylesheet" type="text/css" href="./css/tailwind.css">
 
   <style>
@@ -14,83 +14,18 @@
   </style>
 </head>
 
-<body class="bg-gray-900 text-gray-600 text-lg">
-  <div class="m-auto flex justify-center mt-3">
-    <canvas id="canvas" class="bg-black" resize></canvas>
-    <form class="ml-4">
-      <fieldset>
-        <legend class="text-lg uppercase tracking-wide text-gray-700 ml-auto mr-0">Visualization</legend>
+<body class="bg-gray-900 text-gray-600 text-lg flex justify-center">
+  <div class="mt-10 flex flex-col items-center">
+    <h2 class="text-gray-200 mb-3 text-xl">Choose a simulation:</h2>
 
-        <div class="flex items-center justify-between mt-1">
-          <label for="visualization_stepsPerFrame" class="mr-1">Steps per frame</label>
-          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="visualization_stepsPerFrame" value="5000">
-        </div>
+    <ul class="flex flex-col items-center">
+      <li>
+        <a class="px-4 py-2 text-gray-400 bg-blue-700 hover:bg-blue-900 rounded shadow-md hover:shadow-none uppercase tracking-wide focus:outline-none" href="feeding_agents.html">Feeding agents</a>
+      </li>
+      <li class="mt-5">
+        <a class="px-4 py-2 text-gray-400 bg-blue-700 hover:bg-blue-900 rounded shadow-md hover:shadow-none uppercase tracking-wide focus:outline-none" href="travelling_waves.html">Travelling waves</a>
+      </li>
 
-        <!-- <div class="flex items-center mt-1">
-          <label for="visualization_locationScale" class="mr-2">Scale</label>
-          <div class="flex-grow"></div>
-          <input type="range" name="visualization_locationScale" class="p-1 mr-1" min="1" max="8" step="1" value="8" oninput="locationScaleOutput.value = valueAsNumber">
-          <output for="visualization_locationScale" id="locationScaleOutput" class="w-10 text-right">8</output>
-        </div> -->
-
-        <div class="flex items-center justify-end mt-1">
-          <input type="checkbox" name="visualization_displayAgents" class="p-1 mr-1 leading-tight">
-          <label for="visualization_displayAgents">Display agents</label>
-        </div>
-      </fieldset>
-
-      <fieldset class="mt-3">
-        <legend class="text-lg uppercase tracking-wide text-gray-700 ml-auto mr-0 mb-1">Simulation</legend>
-
-        <div class="flex items-center justify-between">
-          <label for="simulation_agentCount" class="mr-1"># of agents</label>
-          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agentCount" value="10">
-        </div>
-
-        <!-- <div class="flex items-center mt-1">
-          <label for="simulation_world_maxFoodPerLocation" class="mr-2">Max food</label>
-          <div class="flex-grow"></div>
-          <input type="range" name="simulation_world_maxFoodPerLocation" class="p-1 mr-1" min="0" max="10" step="1" value="10" oninput="maxFoodPerLocationOutput.value = valueAsNumber">
-          <output for="simulation_world_maxFoodPerLocation" id="maxFoodPerLocationOutput" class="w-10 text-right">10</output>
-        </div> -->
-
-        <div class="flex items-center justify-between mt-1">
-          <label for="simulation_agent_hungerPerStep" class="mr-2">Hunger per step</label>
-          <div class="flex-grow"></div>
-          <input type="range" name="simulation_agent_hungerPerStep" class="p-1 mr-1" min="0" max="1" step="0.01" value="0.05" oninput="hungerPerStepOutput.value = (Math.round(valueAsNumber * 100)) + '%'">
-          <output for="simulation_agent_hungerPerStep" id="hungerPerStepOutput" class="w-10 text-right">5%</output>
-        </div>
-
-        <div class="flex items-center justify-between mt-1">
-          <label for="simulation_agent_numberOfSensors" class="mr-2"># of sensors</label>
-          <div class="flex-grow"></div>
-          <input type="range" name="simulation_agent_numberOfSensors" class="p-1 mr-1" min="1" max="16" step="1" value="3" oninput="numberOfSensorsOutput.value = valueAsNumber">
-          <output for="simulation_agent_numberOfSensors" id="numberOfSensorsOutput" class="w-10 text-right">3</output>
-        </div>
-
-        <div class="flex items-center justify-between mt-1">
-          <label for="simulation_agent_radius" class="mr-1">Agent radius</label>
-          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agent_radius" value="0.5">
-        </div>
-
-        <div class="flex items-center justify-between mt-1">
-          <label for="simulation_agent_speedCoefficient" class="mr-1">Agent speed coefficient</label>
-          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agent_speedCoefficient" value="1">
-        </div>
-
-        <div class="flex items-center justify-between mt-1">
-          <label for="simulation_agent_sensorNoise_direction" class="mr-1">Direction noise</label>
-          <input type="number" class="shadow-inner bg-black px-2 py-1 rounded" name="simulation_agent_sensorNoise_direction" value="0.05">
-        </div>
-      </fieldset>
-
-      <fieldset class="flex items-center justify-end mt-3">
-        <button id="restartBtn" class="px-4 py-2 text-gray-400 bg-blue-700 hover:bg-blue-900 rounded shadow-md hover:shadow-none uppercase tracking-wide focus:outline-none">Restart</button>
-      </fieldset>
-    </form>
+    </ul>
   </div>
-
-  <script type="text/javascript" src="js/main.js"></script>
-  <script type="text/paperscript" src="js/paperscript.js" canvas="canvas"></script>
 </body>
-</html>

@@ -27,6 +27,8 @@ export class Agent {
     this._radius = config.radius
     this._speedCoefficient = config.speedCoefficient
     this._sensorNoise = config.sensorNoise
+
+    this._sensorDirections = this._calculateSensorDirections()
   }
 
   step() {
@@ -58,14 +60,13 @@ export class Agent {
   }
 
   _movementDirection(local_vicinity) {
-    var step = (2 * Math.PI) / this._numberOfSensors
     var resultant = new Vector2(0, 0)
 
     for (var i = 0; i < this._numberOfSensors; i++) {
-      var direction = Utils.toRectCoords(i * step).add(this._directionNoise())
+      var direction = this._sensorDirections[i].add(this._directionNoise()).normalize()
       var foodAmount = this.localVicinity.towards(direction, this._radius).foodAmount()
 
-      var weightedDirection = direction.mult(foodAmount + this._foodAmountNoise())
+      var weightedDirection = direction.mult(foodAmount / 10 + this._foodAmountNoise())
       resultant = resultant.add(weightedDirection)
     }
 
@@ -86,5 +87,16 @@ export class Agent {
       this._sensorNoise.foodAmount.min,
       this._sensorNoise.foodAmount.max
     )
+  }
+
+  _calculateSensorDirections() {
+    var directions = []
+    var step = (2 * Math.PI) / this._numberOfSensors
+
+    for (var i = 0; i < this._numberOfSensors; i++) {
+      directions.push(Utils.toRectCoords(i * step))
+    }
+
+    return directions
   }
 }
